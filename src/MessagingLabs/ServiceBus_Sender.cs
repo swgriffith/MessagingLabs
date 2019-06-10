@@ -3,13 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.ServiceBus;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 
 
 namespace MessagingLabs
@@ -32,7 +32,6 @@ namespace MessagingLabs
                 .AddEnvironmentVariables()
                 .Build();
 
-            //Get Storage Account details from config files or env variables
             ServiceBusConnectionString = config["SERVICEBUSCONNSTR"];
             QueueName = config["QUEUENAME"];
             TopicName = config["TOPIC"];
@@ -48,9 +47,7 @@ namespace MessagingLabs
 
             await SendMessagesAsync(msg, log);
 
-            return msg != null
-                ? (ActionResult)new OkObjectResult($"Msg written to svc bus: {msg} \n")
-                : new BadRequestObjectResult("Failed to process msg.");
+                return (ActionResult)new OkObjectResult($"Msg written to svc bus: {msg} \n");
 
             }
             catch (Exception ex)
