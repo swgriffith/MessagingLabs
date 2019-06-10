@@ -26,7 +26,7 @@
 1) Back at your Service Bus page, click on '+ Topic', which is directly next to the '+ Queue' you just used. (Note: If '+ Topic' is greyed out, you may have accidentally chosen 'Basic' as your 'Pricing Tier'. You can go to the 'Scale' settings to change the pricing tier.)
 
 1) Again, just provide a topic name, and leave the rest as default.
-1) Back in your Service Bus page, on the left side under 'Entities' select 'Topics'.
+1) Back in your Service Bus page, on the left side under 'Entities' click on 'Topics'.
 1) Click on the topic you created
 1) At the top of the screen click '+ Subscription'
 1) Give your subscription a name, and again leave all the default values and then click 'Create'.
@@ -83,7 +83,7 @@ cd MessagingLab
 
 1) Repeat the same process to create a function using #8: ServiceBusQueueTrigger and #9: ServiceBusTopicTrigger
 
-    Your project folder should look like the following:
+    Your project folder should look like the following, with some variation in the names of the cs files:
     ```
     griffith@DESKTOP-2PPKSOO:~/MessagingLab$ ls -1a
     .
@@ -99,9 +99,13 @@ cd MessagingLab
     obj          
 
     ```
+1) Install the ServiceBus package
+    ```bash
+    dotnet add package Microsoft.Azure.ServiceBus --version 3.4.0
+    ```
 
 ### Code the Message Send HTTP Trigger
-1) Open your local.settings.json file and make it look like the following:
+1) Open your local.settings.json file and make it look like the following. These are the values we're externalizing from our code to make this code more portable.
     ```json
     {
         "IsEncrypted": false,
@@ -110,7 +114,8 @@ cd MessagingLab
             "FUNCTIONS_WORKER_RUNTIME": "dotnet",
             "SERVICEBUSCONNSTR": "<We'll update this later>",
             "QUEUENAME": "<Insert your queue name>",
-            "TOPIC": "<Insert your topic name>"
+            "TOPIC": "<Insert your topic name>",
+            "SUBSCRIPTION": "<Insert your subscription name>"
             }
     }
     ```
@@ -127,6 +132,7 @@ cd MessagingLab
     ```csharp
     using Microsoft.Extensions.Configuration;
     using System.Text;
+    using Microsoft.Azure.ServiceBus;
     ```
 1) At the top of your class add the folowing variables
     ```csharp
@@ -208,5 +214,17 @@ Most of the work for the Service Bus trigger client is handled by the Functions 
 1) Open you Queue trigger function
 1) Update the ServiceBusTrigger attributes as follows
     ```csharp
-    ServiceBusTrigger("%TOPIC%", "<InsertSubscriptionName>", Connection = "SERVICEBUSCONNSTR")
+    ServiceBusTrigger("%QUEUENAME%", Connection = "SERVICEBUSCONNSTR")
+    ```
+    **Note:** While the 'Connection' setting assumes you're providing the name of a configuration setting, and will check the config file, the Topic and Subscription do not. You can tell the runtime to check for these values in the config file by wrapping the value in %, hence %TOPIC% and %SUBSCRIPTION%.
+
+1) Open your Topic Trigger function
+1) Update the ServiceBusTrigger attributes as follows:
+    ```csharp
+    ServiceBusTrigger("%TOPIC%", "%SUBSCRIPTION%", Connection = "SERVICEBUSCONNSTR")
+    ```
+1) Make sure all of your work is save
+1) Start the function to test, using func start at the root of your source code folder.
+    ```bash
+    func start
     ```
