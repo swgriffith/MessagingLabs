@@ -5,12 +5,12 @@
 1) Navigate to the Azure portal: [https://portal.azure.com](https://portal.azure.com)
 1) In the upper left of the screen select 'Create a Resource"
 1) Search for 'Service Bus"
-1) Click on 'Serice Bus' and then 'Create'
+1) Click on 'Service Bus' and then 'Create'
 1) Fill in the following and click 'Create'
-    * Name: Choose a globally unique name
-    * Pricing Tier: Standard is minimally required for using Topics
-    * Subscription: Target deployent subscription
-    * Location: Target deployment region
+    * **Name:** Choose a globally unique name
+    * **Pricing Tier:** Standard is minimally required for using Topics
+    * **Subscription:** Target deployent subscription
+    * **Location:** Target deployment region
 
     ![Create Service Bus Namespace](../images/create-namespace.jpg)
 
@@ -23,16 +23,16 @@
 
     ![Configure Queue](../images/config-queue.jpg)
 
-1) Back at your Service Bus page, click on '+ Topic', which is directly next to the '+ Queue' you just used. (Note: If '+ Topic' is greyed out, you may have accidentally chosen 'Basic' as your 'Pricing Tier'. You can go to the 'Scale' settings to change the pricing tier.)
+1) Back at your Service Bus page, click on '+ Topic', which is directly next to the '+ Queue' you just used. (Note: If '+ Topic' is greyed out, you may have accidentally chosen 'Basic' as your 'Pricing Tier'. You can go to the 'Scale' settings to change the pricing tier to Standard.)
 
 1) Again, just provide a topic name, and leave the rest as default.
 1) Back in your Service Bus page, on the left side under 'Entities' click on 'Topics'.
-1) Click on the topic you created
+1) Click on the topic you just created
 1) At the top of the screen click '+ Subscription'
 1) Give your subscription a name, and again leave all the default values and then click 'Create'.
 
 ## Build your application
-Lets build the application! This app will use the Azure Functions Core tools to create three functions.
+Lets build the application! This app will use the Azure Functions Core tools to scaffold out the project and three functions.
 
 * HTTP Trigger to write messages to the queue and topic
 * Service Bus Queue Trigger to listen for queue messages
@@ -41,11 +41,11 @@ Lets build the application! This app will use the Azure Functions Core tools to 
 ### Scafold out the application
 1) From your prefered command/shell console navigate to the folder where you'd like to build your application
 1) Create a new folder for your project and navigate into the foloder
-```
-mkdir MessagingLab
-cd MessagingLab
-```
-1) Create the function project base using 'func init', selectint 'dotnet' as the worker runtime and 
+    ```
+    mkdir MessagingLab
+    cd MessagingLab
+    ```
+1) Create the function project base using 'func init', selecting 'dotnet' as the worker runtime and 
     ```
     func init
     Select a worker runtime:
@@ -99,13 +99,13 @@ cd MessagingLab
     obj          
 
     ```
-1) Install the ServiceBus package
+1) Install the ServiceBus package by running the following from the within your project folder.
     ```bash
     dotnet add package Microsoft.Azure.ServiceBus --version 3.4.0
     ```
 
 ### Code the Message Send HTTP Trigger
-1) Open your local.settings.json file and make it look like the following. These are the values we're externalizing from our code to make this code more portable.
+1) Open your local.settings.json file and make it look like the following. These are the values we're externalizing from our code to make this code more portable and configurable.
     ```json
     {
         "IsEncrypted": false,
@@ -124,7 +124,7 @@ cd MessagingLab
 
 1) Click on the 'RootManageSharedAccessKey'
     ```
-    Note: We are using the root access key for this lab. I a production envioronment you would create multiple additional keys with different access levels as needed. You can click on the '+ Add' link to get an idea of the options available. 
+    Note: We are using the root access key for this lab, which has unlimited access. In a production envioronment you would create multiple additional keys with different access levels as needed, and possibly even set up a key rotation plan. You can click on the '+ Add' link to get an idea of the options available. 
     ```
 1) Copy the 'Primary Connection String' and paste it into the SERVICEBUSCONNSTR setting in your local.settings.json file
 1) Open your HTTP Trigger function code file
@@ -198,7 +198,7 @@ cd MessagingLab
 1) Update your return method
     ```csharp
     //From
-    
+
     return name != null
      ? (ActionResult)new OkObjectResult($"Hello, {name}")
      : new BadRequestObjectResult("Please pass a name on the query string or in the request body");
@@ -213,9 +213,9 @@ Your code should now look similar to the following:
 [Sample Code](https://raw.githubusercontent.com/swgriffith/MessagingLabs/master/src/MessagingLabs/ServiceBus_Sender.cs)
 
 ### Code the Queue and Topic Triggers
-Most of the work for the Service Bus trigger client is handled by the Functions Core Tools when you created the function, however you will need to tell Azure Functions your connection string, queue and topic names. For this you'll modify the Run method attributes on each as follows.
+Most of the work for the Service Bus trigger client is handled by the Functions runtime base classes, however you will need to tell Azure Functions your connection string, queue and topic names. For this you'll modify the Run method attributes on each as follows.
 1) Open you Queue trigger function
-1) Update the ServiceBusTrigger attributes as follows
+1) Update the ServiceBusTrigger attributes as follows to tell the Azure Functions runtime to get your queue name and connection string from configuration.
     ```csharp
     ServiceBusTrigger("%QUEUENAME%", Connection = "SERVICEBUSCONNSTR")
     ```
@@ -226,8 +226,27 @@ Most of the work for the Service Bus trigger client is handled by the Functions 
     ```csharp
     ServiceBusTrigger("%TOPIC%", "%SUBSCRIPTION%", Connection = "SERVICEBUSCONNSTR")
     ```
-1) Make sure all of your work is save
+1) Make sure all of your work is saved
 1) Start the function to test, using func start at the root of your source code folder.
     ```bash
     func start
     ```
+1) Test the function by running a POST request against the URL provided to you by 'func start'. Your curl should look like this:
+```bash
+curl -d $'{"msg":"Message in a bottle"}' http://localhost:7071/api/ServiceBus_SendMsg
+```
+
+Or if Powershell is more your thing.....
+
+```powershell
+ #Update with your Function URL
+$funcURI = "http://localhost:7071/api/ServiceBus_SendMsg"
+
+$msgBody = @"
+{
+     "msg": "Sending out an SOS"
+   }
+"@
+
+Invoke-WebRequest -Method Post -Body $msgBody -Uri $funcURI
+```
