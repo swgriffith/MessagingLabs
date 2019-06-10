@@ -186,6 +186,7 @@ cd MessagingLab
 1) Back in the 'Run' method, remove the line that is getting the 'Name' parameter from req.Query. We wont be using the query string to pass in values.
 1) Change the following:
     ```csharp
+    //From
     name = name ?? data?.name;
     // To
     string msg = data.msg;
@@ -196,6 +197,8 @@ cd MessagingLab
     ```
 1) Update your return method
     ```csharp
+    //From
+    
     return name != null
      ? (ActionResult)new OkObjectResult($"Hello, {name}")
      : new BadRequestObjectResult("Please pass a name on the query string or in the request body");
