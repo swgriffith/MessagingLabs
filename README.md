@@ -11,7 +11,7 @@ This lab leverages the Azure Functions Core Tools, as well as the Azure Storage 
 ```
 Note: No code editor is needed for this lab. You can work in any preferred text editor. If you do choose to use Visual Studio or VS Code, you can install the extensions noted below to supplement your development experience.
 ```
-
+---**Use Version 2 of Functions Core Tools---**
 * [Azure Functions Core Tools](https://github.com/Azure/azure-functions-core-tools/blob/dev/README.md)
 * [Azure Storage Emulator](https://go.microsoft.com/fwlink/?LinkId=717179&clcid=0x409) - [Documentation](https://docs.microsoft.com/en-us/azure/storage/common/storage-use-emulator)
 * Optional: [Azure Functions VSCode Extension](https://code.visualstudio.com/tutorials/functions-extension/getting-started)
