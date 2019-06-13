@@ -250,3 +250,37 @@ $msgBody = @"
 
 Invoke-WebRequest -Method Post -Body $msgBody -Uri $funcURI
 ```
+
+## Bonus Lab: Use a subscription rule to filter the topic
+Azure Service Bus Topic Subscriptions will allow you to apply a filter rule to only watch messages with specific attributes. In order to do this you'll need to add a rule to your subscription and then make an update to your code to include the property.
+
+1) Open [shell.azure.com](https://shell.azure.com)
+1) Run the following command to set a rule that applies a color='red' sql filter
+    ```bash
+    az servicebus topic subscription rule create --resource-group <Your Resource Group> --namespace-name <Your Service Bus Name> --topic-name <Your Topic Name> --subscription-name <Your Topic Subscription Name> --name <Make up a name for your rule> --filter-sql-expression "color='red'"
+    ```
+1) View your new rule
+
+    ```bash
+    az servicebus topic subscription rule list -g <Your Resource Group> --namespace-name <Your Service Bus Name> --topic-name <Your Topic Name> --subscription-name <Your Topic Subscription Name> -o json
+    ```
+
+1) Update your code to take the message body and set it's value as a user property on the message in your Sender function under the SendMessageAsync method
+
+    ```csharp
+    var message = new Message(Encoding.UTF8.GetBytes(messageBody));
+    message.UserProperties.Add("color", messageBody);
+    ```
+
+1) In one terminal window start your function
+
+    ```bash
+    func start
+    ```
+1) Test your update with curl as follows:
+
+    ```bash
+    curl -d $'{"msg":"blue"}' http://localhost:7071/api/ServiceBus_Sender
+
+    curl -d $'{"msg":"red"}' http://localhost:7071/api/ServiceBus_Sender
+    ```
